@@ -1,0 +1,64 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * { box-sizing: border-box; }
+  body {
+    font-family: 'Inter', sans-serif;
+    @apply bg-slate-50 text-slate-800;
+  }
+  .dark body {
+    @apply bg-slate-900 text-slate-100;
+  }
+}
+
+@layer components {
+  .card {
+    @apply bg-white rounded-2xl shadow-card border border-slate-100 p-5;
+  }
+  .dark .card {
+    @apply bg-slate-800 border-slate-700;
+  }
+  .btn-primary {
+    @apply bg-primary-600 hover:bg-primary-700 text-white font-semibold px-5 py-2.5 rounded-xl transition-all duration-200 flex items-center gap-2;
+  }
+  .btn-secondary {
+    @apply bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold px-5 py-2.5 rounded-xl transition-all duration-200 flex items-center gap-2;
+  }
+  .input {
+    @apply w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-400 focus:border-transparent transition-all;
+  }
+  .sidebar-icon {
+    @apply w-10 h-10 flex items-center justify-center rounded-xl cursor-pointer transition-all duration-200 hover:bg-primary-600 hover:text-white text-slate-400;
+  }
+  .sidebar-icon.active {
+    @apply bg-primary-600 text-white shadow-md;
+  }
+  .badge {
+    @apply inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold;
+  }
+  .badge-green { @apply bg-emerald-100 text-emerald-700; }
+  .badge-yellow { @apply bg-amber-100 text-amber-700; }
+  .badge-red { @apply bg-red-100 text-red-700; }
+  .badge-blue { @apply bg-blue-100 text-blue-700; }
+  .badge-purple { @apply bg-purple-100 text-purple-700; }
+
+  .progress-bar {
+    @apply h-2 bg-slate-100 rounded-full overflow-hidden;
+  }
+  .progress-fill {
+    @apply h-full bg-gradient-to-r from-primary-500 to-primary-400 rounded-full transition-all duration-700;
+  }
+}
+
+@keyframes audio-pulse {
+  0%, 100% { height: 40%; opacity: 0.5; }
+  50% { height: 100%; opacity: 1; }
+}
+
+.animate-audio-bar {
+  animation: audio-pulse 0.8s ease-in-out infinite;
+}

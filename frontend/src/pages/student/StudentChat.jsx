@@ -1,0 +1,294 @@
+import React, { useState, useRef, useEffect } from 'react';
+import { useApp } from '../../context/AppContext';
+import { teamService } from '../../services/api';
+import { Send, Paperclip, Mic, Trash2, Play, FileText, Download, Loader2 } from 'lucide-react';
+
+const roleColor = { professor: 'from-purple-500 to-purple-600', assistant: 'from-emerald-500 to-emerald-600', student: 'from-blue-500 to-blue-600' };
+
+export default function StudentChat() {
+  const { user } = useApp();
+  const [messages, setMessages] = useState([]);
+  const [input, setInput] = useState('');
+  const [loading, setLoading] = useState(true);
+  const bottomRef = useRef(null);
+  const fileInputRef = useRef(null);
+
+  useEffect(() => {
+    if (user?.teamId) {
+      fetchMessages();
+    } else {
+      setLoading(false);
+    }
+  }, [user]);
+
+  useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages]);
+
+  const [isRecording, setIsRecording] = useState(false);
+  const [recordingTime, setRecordingTime] = useState(0);
+  const timerRef = useRef(null);
+  const mediaRecorderRef = useRef(null);
+  const audioChunksRef = useRef([]);
+  const recordingTimeRef = useRef(0);
+
+  useEffect(() => {
+    if (isRecording) {
+      recordingTimeRef.current = 0;
+      timerRef.current = setInterval(() => {
+        setRecordingTime(t => {
+          const newTime = t + 1;
+          recordingTimeRef.current = newTime;
+          return newTime;
+        });
+      }, 1000);
+    } else {
+      clearInterval(timerRef.current);
+      setRecordingTime(0);
+      recordingTimeRef.current = 0;
+    }
+    return () => clearInterval(timerRef.current);
+  }, [isRecording]);
+
+  const startRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      mediaRecorderRef.current = new MediaRecorder(stream);
+      audioChunksRef.current = [];
+      
+      mediaRecorderRef.current.ondataavailable = (e) => {
+        if (e.data.size > 0) audioChunksRef.current.push(e.data);
+      };
+
+      mediaRecorderRef.current.onstop = async () => {
+        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+        const reader = new FileReader();
+        reader.readAsDataURL(audioBlob);
+        reader.onloadend = () => {
+          const base64Audio = reader.result;
+          send('voice', { 
+            url: base64Audio, 
+            duration: recordingTimeRef.current 
+          });
+        };
+        stream.getTracks().forEach(track => track.stop());
+      };
+
+      mediaRecorderRef.current.start();
+      setIsRecording(true);
+    } catch (err) {
+      console.error("Mic access denied", err);
+      alert("Please allow microphone access to record.");
+    }
+  };
+
+  const stopRecording = () => {
+    if (mediaRecorderRef.current && isRecording) {
+      mediaRecorderRef.current.stop();
+    }
+  };
+
+  const cancelRecording = () => {
+    if (mediaRecorderRef.current) {
+      mediaRecorderRef.current.stop();
+      mediaRecorderRef.current.onstop = null; // Prevent sending
+    }
+    setIsRecording(false);
+  };
+
+  const fetchMessages = async () => {
+    try {
+      const res = await teamService.getMessages(user.teamId);
+      setMessages(res.data);
+    } catch (err) {
+      console.error("Failed to fetch messages", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const send = async (type = 'text', data = null) => {
+    if (type === 'text' && !input.trim()) return;
+    
+    const payload = {
+      team_id: user.teamId,
+      sender_id: user.id,
+      text: type === 'text' ? input.trim() : null,
+      type,
+      ...data
+    };
+
+    try {
+      const res = await teamService.sendMessage(user.teamId, payload);
+      setMessages(m => [...m, { ...res.data, is_own: true, sender: user.name, role: user.role }]);
+      if (type === 'text') setInput('');
+    } catch (err) {
+      alert("Failed to send message. Please try again.");
+      console.error("Failed to send message", err);
+    } finally {
+      setIsRecording(false);
+    }
+  };
+
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const isImage = file.type.startsWith('image/');
+      send(isImage ? 'image' : 'file', {
+        url: event.target.result,
+        file_name: file.name,
+        file_size: (file.size / 1024).toFixed(1) + ' KB'
+      });
+    };
+    reader.readAsDataURL(file);
+    e.target.value = '';
+  };
+
+  const formatTime = (seconds) => {
+    const m = Math.floor(seconds / 60);
+    const s = seconds % 60;
+    return `${m}:${s < 10 ? '0' : ''}${s}`;
+  };
+
+  if (loading) return (
+    <div className="h-full flex items-center justify-center">
+      <Loader2 className="w-8 h-8 animate-spin text-primary-500" />
+    </div>
+  );
+
+  const AudioPlayer = ({ url, duration }) => {
+    const [playing, setPlaying] = useState(false);
+    const audioRef = useRef(new Audio(url));
+    
+    useEffect(() => {
+      const audio = audioRef.current;
+      const handleEnd = () => setPlaying(false);
+      audio.addEventListener('ended', handleEnd);
+      return () => audio.removeEventListener('ended', handleEnd);
+    }, []);
+
+    const toggle = () => {
+      if (playing) {
+        audioRef.current.pause();
+      } else {
+        audioRef.current.play();
+      }
+      setPlaying(!playing);
+    };
+
+    return (
+      <div className="flex items-center gap-3 min-w-[140px]">
+        <button onClick={toggle} className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center cursor-pointer hover:bg-white/30 transition-colors">
+          {playing ? <div className="w-3 h-3 bg-white rounded-sm" /> : <Play className="w-4 h-4 fill-current" />}
+        </button>
+        <div className="flex-1 flex items-end gap-0.5 h-4">
+          {[1,2,3,4,5,4,3,2,1,2,3,4,5,4,3,2,1].map((h, i) => (
+            <div key={i} className={`w-0.5 bg-current opacity-40 rounded-full ${playing ? 'animate-audio-bar' : ''}`} style={{ height: `${h * 20}%`, animationDelay: `${i * 0.05}s` }} />
+          ))}
+        </div>
+        <span className="text-[10px] whitespace-nowrap opacity-80">{typeof duration === 'number' ? formatTime(duration) : duration}</span>
+      </div>
+    );
+  };
+
+  return (
+    <div className="flex flex-col h-[calc(100vh-8rem)] animate-fade-in">
+      <div className="card mb-4 flex items-center gap-3 py-3">
+        <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center text-white font-bold">
+          {user?.teamId?.charAt(0).toUpperCase() || 'T'}
+        </div>
+        <div>
+          <p className="font-bold text-slate-800 dark:text-white">Workspace Chat</p>
+          <p className="text-xs text-slate-400">Collaborate with your team members</p>
+        </div>
+        <span className="ml-auto flex items-center gap-1 text-xs text-emerald-500 font-semibold"><span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" /> Live</span>
+      </div>
+
+      <div className="flex-1 overflow-y-auto space-y-4 px-1 pb-2 scrollbar-hide">
+        {messages.map((msg, idx) => (
+          <div key={msg.id || idx} className={`flex gap-3 ${msg.is_own ? 'flex-row-reverse' : ''}`}>
+            <div className={`w-8 h-8 rounded-full flex-shrink-0 flex items-center justify-center text-white text-sm font-bold bg-gradient-to-br ${roleColor[msg.role] || 'from-slate-400 to-slate-500'}`}>
+              {(msg.sender || 'U').charAt(0)}
+            </div>
+            <div className={`max-w-xs lg:max-w-md ${msg.is_own ? 'items-end' : 'items-start'} flex flex-col gap-1`}>
+              {!msg.is_own && <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">{msg.sender || 'Member'}</p>}
+              <div className={`px-4 py-2.5 rounded-2xl text-sm leading-relaxed ${
+                msg.is_own
+                  ? 'bg-blue-600 text-white rounded-tr-sm'
+                  : 'bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-200 shadow-card rounded-tl-sm'
+              } ${msg.type === 'image' ? 'p-1' : ''}`}>
+                {msg.type === 'voice' ? (
+                  <AudioPlayer url={msg.url} duration={msg.duration} />
+                ) : msg.type === 'image' ? (
+                  <div className="space-y-2">
+                    <img src={msg.url} alt="Uploaded" className="rounded-xl max-w-full h-auto max-h-60 object-cover" />
+                  </div>
+                ) : msg.type === 'file' ? (
+                  <div className="flex items-center gap-3 min-w-[160px]">
+                    <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center flex-shrink-0">
+                      <FileText className="w-5 h-5" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-semibold truncate">{msg.file_name}</p>
+                      <p className="text-[10px] opacity-70">{msg.file_size}</p>
+                    </div>
+                    <button className="p-1.5 rounded-lg hover:bg-white/10 transition-colors"><Download className="w-4 h-4" /></button>
+                  </div>
+                ) : (
+                  msg.text
+                )}
+              </div>
+              <p className="text-xs text-slate-400 font-mono tracking-tighter">
+                {new Date(msg.time || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+              </p>
+            </div>
+          </div>
+        ))}
+        <div ref={bottomRef} />
+      </div>
+
+      <div className="card mt-4 flex items-center gap-3 py-3 overflow-hidden relative">
+        <input type="file" ref={fileInputRef} onChange={handleFileChange} className="hidden" accept="image/*,.pdf,.doc,.docx,.zip" />
+        
+        {isRecording ? (
+          <div className="flex-1 flex items-center gap-4 animate-fade-in">
+            <button onClick={cancelRecording} className="p-2 rounded-xl hover:bg-red-50 text-red-400"><Trash2 className="w-5 h-5" /></button>
+            <div className="flex-1 flex items-center gap-3 bg-slate-50 dark:bg-slate-800 rounded-xl px-4 py-2">
+              <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
+              <span className="text-sm font-mono text-slate-600 dark:text-slate-300">{formatTime(recordingTime)}</span>
+              <div className="flex-1 flex items-center gap-1 h-6">
+                {[...Array(15)].map((_, i) => (
+                  <div key={i} className="flex-1 bg-blue-500/30 rounded-full animate-audio-bar" style={{ animationDelay: `${i * 0.05}s` }} />
+                ))}
+              </div>
+            </div>
+            <button onClick={stopRecording} className="w-9 h-9 bg-emerald-500 hover:bg-emerald-600 rounded-xl flex items-center justify-center text-white transition-colors">
+              <Send className="w-4 h-4" />
+            </button>
+          </div>
+        ) : (
+          <>
+            <button onClick={() => fileInputRef.current?.click()} className="p-2 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-400 hover:text-blue-500 transition-colors">
+              <Paperclip className="w-5 h-5" />
+            </button>
+            <input
+              type="text"
+              value={input}
+              onChange={e => setInput(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && send()}
+              placeholder="Type a message..."
+              className="flex-1 bg-transparent outline-none text-sm text-slate-700 dark:text-slate-200 placeholder-slate-400"
+            />
+            <button onClick={startRecording} className="p-2 rounded-xl hover:bg-blue-50 text-blue-500 transition-colors">
+              <Mic className="w-5 h-5" />
+            </button>
+            <button onClick={() => send()} className="w-9 h-9 bg-blue-600 hover:bg-blue-700 rounded-xl flex items-center justify-center text-white transition-colors">
+              <Send className="w-4 h-4" />
+            </button>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
