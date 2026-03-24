@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: "https://unitrack-backend-production-6cb0.up.railway.app"
+  baseURL: "/api"
 });
 
 export const authService = {

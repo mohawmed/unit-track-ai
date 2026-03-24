@@ -1,8 +1,8 @@
 {
-  "routes": [
+  "rewrites": [
     {
-      "src": "/api/(.*)",
-      "dest": "https://unitrack-backend-production-6cb0.up.railway.app/$1"
+      "source": "/api/(.*)",
+      "destination": "https://unitrack-backend-production-6cb0.up.railway.app/$1"
     }
   ]
 }
