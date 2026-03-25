@@ -107,20 +107,40 @@ export default function StudentChat() {
 
   const send = async (type = 'text', data = null) => {
     if (type === 'text' && !input.trim()) return;
-    
+
+    // حفظ النص المحلي قبل مسحه
+    const textToSend = type === 'text' ? input.trim() : null;
+    if (type === 'text') setInput(''); // مسح الـ input فوراً
+
+    // Optimistic update: اعرض الرسالة فوراً بدون استنياء الـ backend
+    const optimisticId = Date.now();
+    const optimisticMsg = {
+      id: optimisticId,
+      text: textToSend,
+      type,
+      is_own: true,
+      sender: user.name,
+      role: user.role,
+      time: new Date().toISOString(),
+      ...data,
+    };
+    setMessages(m => [...m, optimisticMsg]);
+
     const payload = {
       team_id: user.teamId,
       sender_id: user.id,
-      text: type === 'text' ? input.trim() : null,
+      text: textToSend,
       type,
-      ...data
+      ...data,
     };
 
     try {
-      const res = await teamService.sendMessage(user.teamId, payload);
-      setMessages(m => [...m, { ...res.data, is_own: true, sender: user.name, role: user.role }]);
-      if (type === 'text') setInput('');
+      await teamService.sendMessage(user.teamId, payload);
+      // لا حاجة لتحديث الرسالة - هي اتعرضت بالفعل من الـ local state
     } catch (err) {
+      // لو فشل الإرسال، امسح الرسالة المؤقتة
+      setMessages(m => m.filter(msg => msg.id !== optimisticId));
+      if (type === 'text') setInput(textToSend); // رجّع النص للـ input
       alert("Failed to send message. Please try again.");
       console.error("Failed to send message", err);
     } finally {
