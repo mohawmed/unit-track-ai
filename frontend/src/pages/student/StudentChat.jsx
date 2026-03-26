@@ -12,6 +12,7 @@ export default function StudentChat() {
   const [loading, setLoading] = useState(true);
   const bottomRef = useRef(null);
   const fileInputRef = useRef(null);
+  const textInputRef = useRef(null); // قراءة مباشرة من DOM لتجنب مشاكل IME على الموبايل
 
   useEffect(() => {
     if (user?.teamId) {
@@ -106,11 +107,16 @@ export default function StudentChat() {
   };
 
   const send = async (type = 'text', data = null) => {
-    if (type === 'text' && !input.trim()) return;
+    // اقرأ مباشرة من DOM ref عشان تتجنب stale state على الموبايل مع IME/Autocorrect
+    const domValue = textInputRef.current?.value?.trim() ?? '';
+    const latestInput = domValue || input.trim();
+    if (type === 'text' && !latestInput) return;
 
-    // حفظ النص المحلي قبل مسحه
-    const textToSend = type === 'text' ? input.trim() : null;
-    if (type === 'text') setInput(''); // مسح الـ input فوراً
+    const textToSend = type === 'text' ? latestInput : null;
+    if (type === 'text') {
+      setInput(''); // مسح الـ state
+      if (textInputRef.current) textInputRef.current.value = ''; // مسح الـ DOM مباشرة
+    }
 
     // Optimistic update: اعرض الرسالة فوراً بدون استنياء الـ backend
     const optimisticId = Date.now();
@@ -293,10 +299,11 @@ export default function StudentChat() {
               <Paperclip className="w-5 h-5" />
             </button>
             <input
+              ref={textInputRef}
               type="text"
               value={input}
               onChange={e => setInput(e.target.value)}
-              onKeyDown={e => e.key === 'Enter' && send()}
+              onKeyDown={e => e.key === 'Enter' && !e.nativeEvent?.isComposing && send()}
               placeholder="Type a message..."
               className="flex-1 bg-transparent outline-none text-sm text-slate-700 dark:text-slate-200 placeholder-slate-400"
             />

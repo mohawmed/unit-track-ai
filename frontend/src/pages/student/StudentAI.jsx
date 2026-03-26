@@ -21,6 +21,7 @@ export default function StudentAI() {
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const bottomRef = useRef(null);
+  const textInputRef = useRef(null);
 
   useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages]);
 
@@ -31,12 +32,12 @@ export default function StudentAI() {
   };
 
   const send = async (text) => {
-    // التقط القيمة الحالية فوراً من الـ ref أو من argument
-    const q = (text ?? input).trim();
+    const domValue = textInputRef.current?.value?.trim() ?? '';
+    const q = ((text ?? domValue) || input).trim();
     if (!q) return;
 
-    // امسح الـ input وأضف رسالة المستخدم قبل أي async operations
     setInput('');
+    if (textInputRef.current && !text) textInputRef.current.value = '';
     setMessages(m => [...m, { id: Date.now(), role: 'user', text: q }]);
     setLoading(true);
 
@@ -114,10 +115,11 @@ export default function StudentAI() {
       {/* Input */}
       <div className="card mt-4 flex items-center gap-3 py-3">
         <input
+          ref={textInputRef}
           type="text"
           value={input}
           onChange={e => setInput(e.target.value)}
-          onKeyDown={e => e.key === 'Enter' && send()}
+          onKeyDown={e => e.key === 'Enter' && !e.nativeEvent?.isComposing && send()}
           placeholder="Ask Gemini anything about your project..."
           className="flex-1 bg-transparent outline-none text-sm text-slate-700 dark:text-slate-200 placeholder-slate-400"
         />
