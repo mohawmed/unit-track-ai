@@ -60,7 +60,9 @@ export default function StudentChat() {
       };
 
       mediaRecorderRef.current.onstop = async () => {
-        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+        // Use the native mimeType (fixes iOS/Safari playback issues)
+        const mimeType = mediaRecorderRef.current.mimeType || 'audio/webm';
+        const audioBlob = new Blob(audioChunksRef.current, { type: mimeType });
         const reader = new FileReader();
         reader.readAsDataURL(audioBlob);
         reader.onloadend = () => {
@@ -185,20 +187,26 @@ export default function StudentChat() {
 
   const AudioPlayer = ({ url, duration }) => {
     const [playing, setPlaying] = useState(false);
-    const audioRef = useRef(new Audio(url));
+    const audioRef = useRef(null);
     
     useEffect(() => {
+      audioRef.current = new Audio(url);
       const audio = audioRef.current;
       const handleEnd = () => setPlaying(false);
+      
       audio.addEventListener('ended', handleEnd);
-      return () => audio.removeEventListener('ended', handleEnd);
-    }, []);
+      return () => {
+        audio.removeEventListener('ended', handleEnd);
+        audio.pause();
+      };
+    }, [url]);
 
     const toggle = () => {
+      if (!audioRef.current) return;
       if (playing) {
         audioRef.current.pause();
       } else {
-        audioRef.current.play();
+        audioRef.current.play().catch(e => console.error("Audio playback error:", e));
       }
       setPlaying(!playing);
     };
