@@ -25,9 +25,11 @@ async def ai_chat(prompt: schemas.AIPrompt):
     if not os.getenv("GEMINI_API_KEY"):
         raise HTTPException(status_code=500, detail="GEMINI_API_KEY not configured on server")
     try:
-        model = genai.GenerativeModel('gemini-2.5-flash')
-        full_prompt = f"System Context: {prompt.context}\nUser Instruction: {prompt.message}" if prompt.context else prompt.message
-        response = model.generate_content(full_prompt)
+        model = genai.GenerativeModel(
+            model_name='gemini-2.5-flash',
+            system_instruction=prompt.context if prompt.context else None
+        )
+        response = model.generate_content(prompt.message)
         return {"response": response.text}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
