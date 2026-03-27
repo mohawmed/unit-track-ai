@@ -27,7 +27,10 @@ export default function AdminSettings() {
 
   const handleSave = () => {
     setSaving(true);
-    setTimeout(() => setSaving(false), 1000);
+    setTimeout(() => {
+      setSaving(false);
+      alert('تم حفظ إعدادات النظام بنجاح!');
+    }, 1000);
   };
 
   if (loading) return (

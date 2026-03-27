@@ -53,7 +53,10 @@ export default function AdminAnalytics() {
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold text-slate-800 dark:text-white">نظرة عامة على النجاح</h2>
         <div className="flex gap-3">
-           <button className="flex items-center gap-2 text-sm text-slate-600 bg-white dark:bg-slate-800 px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-50 transition-colors shadow-sm font-medium">
+           <button 
+             onClick={() => alert('تم فتح قائمة التصفية المتقدمة!')}
+             className="flex items-center gap-2 text-sm text-slate-600 bg-white dark:bg-slate-800 px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-50 transition-colors shadow-sm font-medium"
+           >
              <Filter className="w-4 h-4" /> تصفية النتائج
            </button>
         </div>

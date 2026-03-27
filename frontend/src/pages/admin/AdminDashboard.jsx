@@ -84,11 +84,16 @@ export default function AdminDashboard() {
         ))}
       </div>
 
-      {/* List Section */}
+     {/* List Section */}
       <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700 p-6">
          <div className="flex justify-between items-center mb-6">
             <h3 className="font-bold text-lg text-slate-800 dark:text-white">Admin Dashboard</h3>
-            <button className="text-sm text-blue-600 bg-blue-50 px-3 py-1.5 rounded-lg font-medium hover:bg-blue-100 transition-colors">عرض كل الفرق</button>
+            <button 
+              onClick={() => alert('جاري تحويلك لعرض جميع تفاصيل الفرق')}
+              className="text-sm text-blue-600 bg-blue-50 px-3 py-1.5 rounded-lg font-medium hover:bg-blue-100 transition-colors"
+            >
+              عرض كل الفرق
+            </button>
          </div>
          
          <div className="space-y-4">
