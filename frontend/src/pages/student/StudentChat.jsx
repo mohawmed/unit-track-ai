@@ -249,13 +249,15 @@ export default function StudentChat({ teamId: propTeamId, teamName: propTeamName
       <div className="flex-1 overflow-y-auto space-y-4 px-1 pb-2 scrollbar-hide">
         {messages.map((msg, idx) => {
           const isOwn = msg.sender_id === user.id;
+          const msgSender = isOwn ? user.name : (msg.sender || 'Member');
+          const msgRole = isOwn ? user.role : (msg.role || 'student');
           return (
           <div key={msg.id || idx} className={`flex gap-3 ${isOwn ? 'flex-row-reverse' : ''}`}>
-            <div className={`w-8 h-8 rounded-full flex-shrink-0 flex items-center justify-center text-white text-sm font-bold bg-gradient-to-br ${roleColor[msg.role] || 'from-slate-400 to-slate-500'}`}>
-              {(msg.sender || 'U').charAt(0)}
+            <div className={`w-8 h-8 rounded-full flex-shrink-0 flex items-center justify-center text-white text-sm font-bold bg-gradient-to-br ${roleColor[msgRole] || 'from-slate-400 to-slate-500'}`}>
+              {(msgSender || 'U').charAt(0)}
             </div>
             <div className={`max-w-xs lg:max-w-md ${isOwn ? 'items-end' : 'items-start'} flex flex-col gap-1`}>
-              {!isOwn && <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">{msg.sender || 'Member'}</p>}
+              {!isOwn && <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">{msgSender}</p>}
               <div className={`px-4 py-2.5 rounded-2xl text-sm leading-relaxed ${
                 isOwn
                   ? 'bg-blue-600 text-white rounded-tr-sm'
