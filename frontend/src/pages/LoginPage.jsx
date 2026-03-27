@@ -12,7 +12,6 @@ const roles = [
 
 export default function LoginPage() {
   const [selectedRole, setSelectedRole] = useState('student');
-  const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPass, setShowPass] = useState(false);
@@ -118,17 +117,6 @@ export default function LoginPage() {
 
           {/* Form */}
           <form onSubmit={handleLogin} className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1.5">Full Name</label>
-              <input
-                type="text"
-                value={name}
-                onChange={e => setName(e.target.value)}
-                className="input w-full"
-                placeholder="Enter your full name"
-                required
-              />
-            </div>
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1.5">University Email</label>
               <input
