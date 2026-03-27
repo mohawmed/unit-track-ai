@@ -30,41 +30,48 @@ export default function AdminUsers() {
     }
   };
 
-  const handleAddUser = (e) => {
+  const handleAddUser = async (e) => {
     e.preventDefault();
-    // Simulate API call for adding user
-    const newUserObj = {
-      id: Date.now(),
-      name: newUser.name,
-      email: newUser.email,
-      password: newUser.password,
-      role: newUser.role,
-      bio: newUser.bio,
-      teamId: newUser.teamId || null,
-    };
-    
-    let updatedTeams = [...teams];
-    if (newUser.role === 'student' && newUser.createNewTeam) {
-       const newTeamObj = {
-          id: `T${Date.now()}`,
-          name: newUser.newTeamName,
-          project_title: newUser.newTeamProjectTitle,
-          professor_id: null,
-          progress: 0,
-          students: [newUserObj],
-          emoji: '🚀',
-          color: '#3b82f6'
-       };
-       updatedTeams.push(newTeamObj);
-       newUserObj.teamId = newTeamObj.id;
-    } else if (newUser.role === 'professor' && newUser.teamId) {
-        updatedTeams = updatedTeams.map(t => t.id === newUser.teamId ? { ...t, professor_id: newUserObj.id } : t);
-    }
+    try {
+      const payload = {
+        id: "",
+        name: newUser.name,
+        email: newUser.email,
+        password: newUser.password,
+        role: newUser.role,
+        bio: newUser.bio,
+        team_id: newUser.teamId || null,
+      };
 
-    setTeams(updatedTeams);
-    setUsers([newUserObj, ...users]); // Add to beginning of list
-    setIsAddUserModalOpen(false);
-    setNewUser({ name: '', email: '', password: '', role: 'student', teamId: '', createNewTeam: false, newTeamName: '', newTeamProjectTitle: '', bio: '' });
+      const res = await adminService.createUser(payload);
+      const newUserObj = res.data;
+      
+      let updatedTeams = [...teams];
+      if (newUser.role === 'student' && newUser.createNewTeam) {
+         const newTeamObj = {
+            id: `T${Date.now()}`,
+            name: newUser.newTeamName,
+            project_title: newUser.newTeamProjectTitle,
+            professor_id: null,
+            progress: 0,
+            students: [newUserObj],
+            emoji: '🚀',
+            color: '#3b82f6'
+         };
+         updatedTeams.push(newTeamObj);
+         newUserObj.teamId = newTeamObj.id;
+      } else if (newUser.role === 'professor' && newUser.teamId) {
+          updatedTeams = updatedTeams.map(t => t.id === newUser.teamId ? { ...t, professor_id: newUserObj.id } : t);
+      }
+
+      setTeams(updatedTeams);
+      setUsers([newUserObj, ...users]); // Add to beginning of list
+      setIsAddUserModalOpen(false);
+      setNewUser({ name: '', email: '', password: '', role: 'student', teamId: '', createNewTeam: false, newTeamName: '', newTeamProjectTitle: '', bio: '' });
+    } catch (err) {
+      console.error("Failed to create user", err);
+      alert(err.response?.data?.detail || "Failed to create user. Please check if email already exists.");
+    }
   };
 
   const filteredUsers = users.filter(u => 

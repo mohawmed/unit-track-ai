@@ -10,6 +10,10 @@ class UserBase(BaseModel):
     avatar: Optional[str] = None
     bio: Optional[str] = None
 
+class UserCreate(UserBase):
+    password: str
+    team_id: Optional[str] = None
+
 class UserResponse(UserBase):
     teamId: Optional[str] = None
     class Config:

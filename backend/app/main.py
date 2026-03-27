@@ -244,6 +244,46 @@ def get_admin_stats(db: Session = Depends(get_db)):
         "avg_progress": avg
     }
 
+@app.post("/admin/users", response_model=schemas.UserResponse)
+def create_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
+    import uuid
+    db_user = db.query(models.User).filter(models.User.email == user.email).first()
+    if db_user:
+        raise HTTPException(status_code=400, detail="Email already registered")
+    
+    user_id = user.id if user.id else f"{user.role[:3]}-{str(uuid.uuid4())[:6]}"
+
+    new_user = models.User(
+        id=user_id,
+        name=user.name,
+        email=user.email,
+        role=user.role,
+        avatar=user.avatar,
+        bio=user.bio,
+        hashed_password=user.password
+    )
+    db.add(new_user)
+    
+    if user.role == 'student' and user.team_id:
+        team = db.query(models.Team).filter(models.Team.id == user.team_id).first()
+        if team:
+            team.students.append(new_user)
+            
+    db.commit()
+    db.refresh(new_user)
+    
+    team_id_res = user.team_id if user.role == 'student' else None
+    
+    return {
+        "id": new_user.id,
+        "name": new_user.name,
+        "email": new_user.email,
+        "role": new_user.role,
+        "avatar": new_user.avatar,
+        "bio": new_user.bio,
+        "teamId": team_id_res
+    }
+
 @app.get("/admin/users", response_model=List[schemas.UserResponse])
 def get_all_users(db: Session = Depends(get_db)):
     users = db.query(models.User).all()
