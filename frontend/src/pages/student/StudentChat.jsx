@@ -17,14 +17,18 @@ export default function StudentChat({ teamId: propTeamId, teamName: propTeamName
   const textInputRef = useRef(null); // قراءة مباشرة من DOM لتجنب مشاكل IME على الموبايل
 
   useEffect(() => {
-    if (activeTeamId) {
-      fetchMessages();
-    } else {
+    if (!activeTeamId) {
       setLoading(false);
+      return;
     }
+    fetchMessages();
+    const interval = setInterval(() => {
+      fetchMessages(true);
+    }, 3000); // 3-second polling
+    return () => clearInterval(interval);
   }, [activeTeamId]);
 
-  useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages]);
+  useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages.length]);
 
   const [isRecording, setIsRecording] = useState(false);
   const [recordingTime, setRecordingTime] = useState(0);
@@ -99,14 +103,14 @@ export default function StudentChat({ teamId: propTeamId, teamName: propTeamName
     setIsRecording(false);
   };
 
-  const fetchMessages = async () => {
+  const fetchMessages = async (isBackground = false) => {
     try {
       const res = await teamService.getMessages(activeTeamId);
       setMessages(res.data);
     } catch (err) {
       console.error("Failed to fetch messages", err);
     } finally {
-      setLoading(false);
+      if (!isBackground) setLoading(false);
     }
   };
 
