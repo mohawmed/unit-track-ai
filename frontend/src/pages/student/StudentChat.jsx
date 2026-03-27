@@ -130,6 +130,7 @@ export default function StudentChat({ teamId: propTeamId, teamName: propTeamName
       type,
       is_own: true,
       sender: user.name,
+      sender_id: user.id,
       role: user.role,
       time: new Date().toISOString(),
       ...data,
@@ -242,15 +243,17 @@ export default function StudentChat({ teamId: propTeamId, teamName: propTeamName
       </div>
 
       <div className="flex-1 overflow-y-auto space-y-4 px-1 pb-2 scrollbar-hide">
-        {messages.map((msg, idx) => (
-          <div key={msg.id || idx} className={`flex gap-3 ${msg.is_own ? 'flex-row-reverse' : ''}`}>
+        {messages.map((msg, idx) => {
+          const isOwn = msg.sender_id === user.id;
+          return (
+          <div key={msg.id || idx} className={`flex gap-3 ${isOwn ? 'flex-row-reverse' : ''}`}>
             <div className={`w-8 h-8 rounded-full flex-shrink-0 flex items-center justify-center text-white text-sm font-bold bg-gradient-to-br ${roleColor[msg.role] || 'from-slate-400 to-slate-500'}`}>
               {(msg.sender || 'U').charAt(0)}
             </div>
-            <div className={`max-w-xs lg:max-w-md ${msg.is_own ? 'items-end' : 'items-start'} flex flex-col gap-1`}>
-              {!msg.is_own && <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">{msg.sender || 'Member'}</p>}
+            <div className={`max-w-xs lg:max-w-md ${isOwn ? 'items-end' : 'items-start'} flex flex-col gap-1`}>
+              {!isOwn && <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">{msg.sender || 'Member'}</p>}
               <div className={`px-4 py-2.5 rounded-2xl text-sm leading-relaxed ${
-                msg.is_own
+                isOwn
                   ? 'bg-blue-600 text-white rounded-tr-sm'
                   : 'bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-200 shadow-card rounded-tl-sm'
               } ${msg.type === 'image' ? 'p-1' : ''}`}>
@@ -280,7 +283,7 @@ export default function StudentChat({ teamId: propTeamId, teamName: propTeamName
               </p>
             </div>
           </div>
-        ))}
+        )})}
         <div ref={bottomRef} />
       </div>
 
