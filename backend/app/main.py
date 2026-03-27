@@ -204,7 +204,26 @@ def get_notifications(user_id: str, db: Session = Depends(get_db)):
 # Chat Endpoints
 @app.get("/teams/{team_id}/messages", response_model=List[schemas.MessageResponse])
 def get_messages(team_id: str, db: Session = Depends(get_db)):
-    return db.query(models.Message).filter(models.Message.team_id == team_id).all()
+    messages = db.query(models.Message).filter(models.Message.team_id == team_id).all()
+    result = []
+    for msg in messages:
+        user = db.query(models.User).filter(models.User.id == msg.sender_id).first()
+        result.append({
+            "id": msg.id,
+            "team_id": msg.team_id,
+            "sender_id": msg.sender_id,
+            "text": msg.text,
+            "type": msg.type,
+            "url": msg.url,
+            "file_name": msg.file_name,
+            "file_size": msg.file_size,
+            "duration": msg.duration,
+            "time": msg.time,
+            "is_own": msg.is_own,
+            "sender": user.name if user else "Member",
+            "role": user.role if user else "student"
+        })
+    return result
 
 @app.post("/teams/{team_id}/messages", response_model=schemas.MessageResponse)
 def create_message(team_id: str, msg: schemas.MessageBase, db: Session = Depends(get_db)):

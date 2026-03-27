@@ -66,6 +66,8 @@ class MessageResponse(MessageBase):
     id: int
     time: datetime
     is_own: bool
+    sender: Optional[str] = None
+    role: Optional[str] = None
     class Config:
         from_attributes = True
 
