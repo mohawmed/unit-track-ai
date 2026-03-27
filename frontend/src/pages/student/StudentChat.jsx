@@ -5,8 +5,10 @@ import { Send, Paperclip, Mic, Trash2, Play, FileText, Download, Loader2 } from 
 
 const roleColor = { professor: 'from-purple-500 to-purple-600', assistant: 'from-emerald-500 to-emerald-600', student: 'from-blue-500 to-blue-600' };
 
-export default function StudentChat() {
+export default function StudentChat({ teamId: propTeamId, teamName: propTeamName }) {
   const { user } = useApp();
+  const activeTeamId = propTeamId || user?.teamId;
+  const activeTeamName = propTeamName || 'Workspace Chat';
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(true);
@@ -15,12 +17,12 @@ export default function StudentChat() {
   const textInputRef = useRef(null); // قراءة مباشرة من DOM لتجنب مشاكل IME على الموبايل
 
   useEffect(() => {
-    if (user?.teamId) {
+    if (activeTeamId) {
       fetchMessages();
     } else {
       setLoading(false);
     }
-  }, [user]);
+  }, [activeTeamId]);
 
   useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages]);
 
@@ -99,7 +101,7 @@ export default function StudentChat() {
 
   const fetchMessages = async () => {
     try {
-      const res = await teamService.getMessages(user.teamId);
+      const res = await teamService.getMessages(activeTeamId);
       setMessages(res.data);
     } catch (err) {
       console.error("Failed to fetch messages", err);
@@ -135,7 +137,7 @@ export default function StudentChat() {
     setMessages(m => [...m, optimisticMsg]);
 
     const payload = {
-      team_id: user.teamId,
+      team_id: activeTeamId,
       sender_id: user.id,
       text: textToSend,
       type,
@@ -143,7 +145,7 @@ export default function StudentChat() {
     };
 
     try {
-      await teamService.sendMessage(user.teamId, payload);
+      await teamService.sendMessage(activeTeamId, payload);
       // لا حاجة لتحديث الرسالة - هي اتعرضت بالفعل من الـ local state
     } catch (err) {
       // لو فشل الإرسال، امسح الرسالة المؤقتة
@@ -230,10 +232,10 @@ export default function StudentChat() {
     <div className="flex flex-col h-[calc(100vh-8rem)] animate-fade-in">
       <div className="card mb-4 flex items-center gap-3 py-3">
         <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center text-white font-bold">
-          {user?.teamId?.charAt(0).toUpperCase() || 'T'}
+          {activeTeamId?.charAt(0).toUpperCase() || 'T'}
         </div>
         <div>
-          <p className="font-bold text-slate-800 dark:text-white">Workspace Chat</p>
+          <p className="font-bold text-slate-800 dark:text-white">{activeTeamName}</p>
           <p className="text-xs text-slate-400">Collaborate with your team members</p>
         </div>
         <span className="ml-auto flex items-center gap-1 text-xs text-emerald-500 font-semibold"><span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" /> Live</span>
