@@ -516,10 +516,13 @@ def delete_user(user_id: str, db: Session = Depends(get_db)):
         for t in ta_teams:
             t.assistant_id = None
             
-    # 2. Delete notifications
+    # 2. Delete messages
+    db.query(models.Message).filter(models.Message.sender_id == user_id).delete()
+    
+    # 3. Delete notifications
     db.query(models.Notification).filter(models.Notification.user_id == user_id).delete()
     
-    # 3. Delete the user
+    # 4. Delete the user
     db.delete(user)
     db.commit()
     return {"status": "success", "message": f"User {user_id} deleted successfully"}
