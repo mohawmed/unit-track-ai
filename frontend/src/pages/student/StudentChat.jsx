@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useApp } from '../../context/AppContext';
 import { teamService } from '../../services/api';
-import { Send, Paperclip, Mic, Trash2, Play, FileText, Download, Loader2, Sparkles, X, Pencil, Check, MoreVertical } from 'lucide-react';
+import { Send, Paperclip, Mic, Trash2, Play, FileText, Download, Loader2, Sparkles, X, Edit2, CheckCircle2, MoreVertical } from 'lucide-react';
 
 const roleColor = { professor: 'from-purple-500 to-purple-600', assistant: 'from-emerald-500 to-emerald-600', student: 'from-blue-500 to-blue-600' };
 
@@ -359,18 +359,18 @@ export default function StudentChat({ teamId: propTeamId, teamName: propTeamName
                       </button>
                       
                       {activeMenuId === msg.id && (
-                        <div className="absolute bottom-full left-0 mb-2 bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 shadow-xl rounded-xl py-1 z-20 min-w-[100px] animate-fade-in">
+                        <div className="absolute bottom-full left-0 mb-2 bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 shadow-xl rounded-xl py-1 z-20 min-w-[110px] animate-fade-in" onClick={e => e.stopPropagation()}>
                           <button 
                             type="button"
                             onClick={(e) => { e.preventDefault(); e.stopPropagation(); setEditingMsgId(msg.id); setEditValue(msg.text || ""); setActiveMenuId(null); }}
-                            className="w-full text-right flex items-center justify-end gap-2 px-3 py-1.5 text-xs text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
+                            className="w-full text-right flex items-center justify-end gap-2 px-3 py-2 text-xs text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
                           >
-                            تعديل <Pencil className="w-3.5 h-3.5" />
+                            تعديل <Edit2 className="w-3.5 h-3.5" />
                           </button>
                           <button 
                             type="button"
                             onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleDelete(msg.id); setActiveMenuId(null); }}
-                            className="w-full text-right flex items-center justify-end gap-2 px-3 py-1.5 text-xs text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                            className="w-full text-right flex items-center justify-end gap-2 px-3 py-2 text-xs text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
                           >
                             حذف <Trash2 className="w-3.5 h-3.5" />
                           </button>
@@ -381,17 +381,17 @@ export default function StudentChat({ teamId: propTeamId, teamName: propTeamName
                 )}
 
                 {editingMsgId === msg.id ? (
-                  <div className="flex flex-col gap-2 min-w-[150px]">
+                  <div className="flex flex-col gap-2 min-w-[180px]" onClick={e => e.stopPropagation()}>
                     <textarea 
                       value={editValue || ""}
                       onChange={(e) => setEditValue(e.target.value)}
-                      className="bg-white/10 text-white border border-white/20 rounded-lg p-2 text-sm focus:outline-none focus:ring-1 focus:ring-white/40 resize-none w-full"
+                      className="bg-white/20 text-white placeholder-white/50 border border-white/30 rounded-lg p-2 text-sm focus:outline-none focus:ring-2 focus:ring-white/50 resize-none w-full"
                       rows={2}
                       autoFocus
                     />
-                    <div className="flex justify-end gap-1">
-                      <button type="button" onClick={(e) => { e.preventDefault(); setEditingMsgId(null); }} className="p-1 rounded-md hover:bg-white/10"><X className="w-4 h-4" /></button>
-                      <button type="button" onClick={(e) => { e.preventDefault(); handleUpdate(msg.id); }} className="p-1 bg-white/20 rounded-md hover:bg-white/30"><Check className="w-4 h-4" /></button>
+                    <div className="flex justify-end gap-2">
+                       <button type="button" onClick={(e) => { e.preventDefault(); setEditingMsgId(null); }} className="px-2 py-1 bg-white/10 rounded-md hover:bg-white/20 text-[10px] font-bold">إلغاء</button>
+                       <button type="button" onClick={(e) => { e.preventDefault(); handleUpdate(msg.id); }} className="px-2 py-1 bg-white text-blue-600 rounded-md hover:bg-blue-50 text-[10px] font-bold flex items-center gap-1">حفظ <CheckCircle2 className="w-3 h-3" /></button>
                     </div>
                   </div>
                 ) : msg.type === 'voice' ? (
