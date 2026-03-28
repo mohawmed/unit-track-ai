@@ -331,6 +331,7 @@ export default function StudentChat({ teamId: propTeamId, teamName: propTeamName
 
       <div className="flex-1 overflow-y-auto space-y-4 px-1 pb-2 scrollbar-hide">
         {messages.map((msg, idx) => {
+          if (!msg) return null;
           const isOwn = msg.sender_id === user.id;
           const msgSender = isOwn ? user.name : (msg.sender || 'Member');
           const msgRole = isOwn ? user.role : (msg.role || 'student');
