@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useApp } from '../../context/AppContext';
 import { teamService } from '../../services/api';
-import { Send, Paperclip, Mic, Trash2, Play, FileText, Download, Loader2, Sparkles, X } from 'lucide-react';
+import { Send, Paperclip, Mic, Trash2, Play, FileText, Download, Loader2, Sparkles, X, Pencil, Check } from 'lucide-react';
 
 const roleColor = { professor: 'from-purple-500 to-purple-600', assistant: 'from-emerald-500 to-emerald-600', student: 'from-blue-500 to-blue-600' };
 
@@ -18,6 +18,10 @@ export default function StudentChat({ teamId: propTeamId, teamName: propTeamName
   const [summary, setSummary] = useState('');
   const [showSummary, setShowSummary] = useState(false);
   const [isSummarizing, setIsSummarizing] = useState(false);
+  
+  // Message Edit/Delete States
+  const [editingMsgId, setEditingMsgId] = useState(null);
+  const [editValue, setEditValue] = useState("");
 
   useEffect(() => {
     clearChatBadge();
@@ -172,6 +176,32 @@ export default function StudentChat({ teamId: propTeamId, teamName: propTeamName
     }
   };
 
+  const handleUpdate = async (msgId) => {
+    if (!editValue.trim()) return;
+    try {
+      await teamService.updateMessage(activeTeamId, msgId, { 
+        sender_id: user.id, 
+        text: editValue,
+        team_id: activeTeamId,
+        type: 'text'
+      });
+      setEditingMsgId(null);
+      fetchMessages(true);
+    } catch (err) {
+      console.error("Failed to update message", err);
+    }
+  };
+
+  const handleDelete = async (msgId) => {
+    if (!window.confirm("هل أنت متأكد من حذف هذه الرسالة؟")) return;
+    try {
+      await teamService.deleteMessage(activeTeamId, msgId, user.id);
+      fetchMessages(true);
+    } catch (err) {
+      console.error("Failed to delete message", err);
+    }
+  };
+
   const handleGetSummary = async () => {
     if (!activeTeamId) {
       alert("Error: No active team selected.");
@@ -306,12 +336,46 @@ export default function StudentChat({ teamId: propTeamId, teamName: propTeamName
             </div>
             <div className={`max-w-xs lg:max-w-md ${isOwn ? 'items-end' : 'items-start'} flex flex-col gap-1`}>
               {!isOwn && <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">{msgSender}</p>}
-              <div className={`px-4 py-2.5 rounded-2xl text-sm leading-relaxed ${
+              <div className={`group relative px-4 py-2.5 rounded-2xl text-sm leading-relaxed ${
                 isOwn
                   ? 'bg-blue-600 text-white rounded-tr-sm'
                   : 'bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-200 shadow-card rounded-tl-sm'
               } ${msg.type === 'image' ? 'p-1' : ''}`}>
-                {msg.type === 'voice' ? (
+                
+                {/* Edit/Delete Actions */}
+                {isOwn && !editingMsgId && (
+                  <div className="absolute top-0 right-full mr-2 hidden group-hover:flex items-center gap-1">
+                    <button 
+                      onClick={() => { setEditingMsgId(msg.id); setEditValue(msg.text); }}
+                      className="p-1 px-2.5 rounded-lg bg-white/10 hover:bg-white/20 text-white flex items-center gap-1.5 transition-colors"
+                      title="Edit"
+                    >
+                      <Pencil className="w-3.5 h-3.5" />
+                    </button>
+                    <button 
+                      onClick={() => handleDelete(msg.id)}
+                      className="p-1 px-2.5 rounded-lg bg-red-500/20 hover:bg-red-500/30 text-white flex items-center gap-1.5 transition-colors"
+                      title="Delete"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                )}
+
+                {editingMsgId === msg.id ? (
+                  <div className="flex flex-col gap-2 min-w-[150px]">
+                    <textarea 
+                      value={editValue}
+                      onChange={(e) => setEditValue(e.target.value)}
+                      className="bg-white/10 text-white border border-white/20 rounded-lg p-2 text-sm focus:outline-none focus:ring-1 focus:ring-white/40 resize-none"
+                      rows={2}
+                    />
+                    <div className="flex justify-end gap-1">
+                      <button onClick={() => setEditingMsgId(null)} className="p-1 rounded-md hover:bg-white/10"><X className="w-4 h-4" /></button>
+                      <button onClick={() => handleUpdate(msg.id)} className="p-1 bg-white/20 rounded-md hover:bg-white/30"><Check className="w-4 h-4" /></button>
+                    </div>
+                  </div>
+                ) : msg.type === 'voice' ? (
                   <AudioPlayer url={msg.url} duration={msg.duration} />
                 ) : msg.type === 'image' ? (
                   <div className="space-y-2">

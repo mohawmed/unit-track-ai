@@ -324,6 +324,31 @@ def create_message(team_id: str, msg: schemas.MessageBase, db: Session = Depends
         print(f"CHAT_ERROR: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
+@app.put("/teams/{team_id}/messages/{message_id}", response_model=schemas.MessageResponse)
+def update_message(team_id: str, message_id: int, msg_update: schemas.MessageBase, db: Session = Depends(get_db)):
+    msg = db.query(models.Message).filter(models.Message.id == message_id, models.Message.team_id == team_id).first()
+    if not msg:
+        raise HTTPException(status_code=404, detail="Message not found")
+    if msg.sender_id != msg_update.sender_id:
+        raise HTTPException(status_code=403, detail="Not authorized to edit this message")
+    
+    msg.text = msg_update.text
+    db.commit()
+    db.refresh(msg)
+    return msg
+
+@app.delete("/teams/{team_id}/messages/{message_id}")
+def delete_message(team_id: str, message_id: int, sender_id: str, db: Session = Depends(get_db)):
+    msg = db.query(models.Message).filter(models.Message.id == message_id, models.Message.team_id == team_id).first()
+    if not msg:
+        raise HTTPException(status_code=404, detail="Message not found")
+    if msg.sender_id != sender_id:
+        raise HTTPException(status_code=403, detail="Not authorized to delete this message")
+    
+    db.delete(msg)
+    db.commit()
+    return {"status": "success"}
+
 @app.post("/users/{user_id}/notifications/clear-chat")
 def clear_chat_notifications(user_id: str, db: Session = Depends(get_db)):
     db.query(models.Notification).filter(

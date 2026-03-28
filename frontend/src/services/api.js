@@ -24,6 +24,8 @@ export const teamService = {
   getMessages: (teamId) => api.get(`/teams/${teamId}/messages`),
   sendMessage: (teamId, data) => api.post(`/teams/${teamId}/messages`, data),
   getChatSummary: (teamId) => api.post(`/teams/${teamId}/chat-summary`),
+  updateMessage: (teamId, msgId, data) => api.put(`/teams/${teamId}/messages/${msgId}`, data),
+  deleteMessage: (teamId, msgId, senderId) => api.delete(`/teams/${teamId}/messages/${msgId}`, { params: { sender_id: senderId } }),
   getAll: () => api.get('/teams'),
 };
 
