@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useApp } from '../../context/AppContext';
 import { userService } from '../../services/api';
 import {
@@ -11,6 +12,7 @@ const typeConfig = {
   deadline: { icon: Clock, color: 'text-amber-500 bg-amber-50 dark:bg-amber-900/20', label: 'موعد نهائي' },
   task:     { icon: CheckCircle2, color: 'text-emerald-500 bg-emerald-50 dark:bg-emerald-900/20', label: 'مهمة' },
   score:    { icon: Star, color: 'text-purple-500 bg-purple-50 dark:bg-purple-900/20', label: 'تقييم' },
+  chat:     { icon: MessageSquare, color: 'text-blue-500 bg-blue-50 dark:bg-blue-900/20', label: 'دردشة' },
 };
 
 // ========================
@@ -177,6 +179,7 @@ function CommentModal({ notif, onClose }) {
 // ========================
 export default function StudentNotifications() {
   const { user, setNotifications } = useApp();
+  const navigate = useNavigate();
   const [notifs, setNotifs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeComment, setActiveComment] = useState(null); // notif to show in modal
@@ -218,6 +221,8 @@ export default function StudentNotifications() {
     // If it's a feedback/comment notification → open modal
     if (notif.type === 'feedback') {
       setActiveComment(notif);
+    } else if (notif.type === 'chat') {
+      navigate('/student/chat');
     }
   };
 

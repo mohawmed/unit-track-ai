@@ -244,17 +244,21 @@ def create_message(team_id: str, msg: schemas.MessageBase, db: Session = Depends
         if team:
             # 2. Collect ALL potential member IDs
             recipient_ids = []
-            for student in team.students:
-                recipient_ids.append(student.id)
+            
+            # Query the association table directly for students
+            student_links = db.query(models.team_students).filter(models.team_students.c.team_id == team.id).all()
+            for link in student_links:
+                recipient_ids.append(link.student_id)
+            
             if team.professor_id: recipient_ids.append(team.professor_id)
             if team.assistant_id: recipient_ids.append(team.assistant_id)
             
-            # 3. Filter: unique, not the sender
-            final_recipients = set([r for r in recipient_ids if str(r).lower() != str(msg.sender_id).lower()])
+            # 3. Filter: unique, not the sender (case-insensitive)
+            sender_id_lower = str(msg.sender_id).lower()
+            final_recipients = set([r for r in recipient_ids if str(r).lower() != sender_id_lower])
             
             sender = db.query(models.User).filter(models.User.id == msg.sender_id).first()
             sender_display_name = sender.name if sender else "Member"
-            
             text_preview = (msg.text[:50] + "...") if msg.text and len(msg.text) > 50 else (msg.text or "Sent a file")
             
             for r_id in final_recipients:
@@ -267,7 +271,7 @@ def create_message(team_id: str, msg: schemas.MessageBase, db: Session = Depends
                     read=False
                 )
                 db.add(notif)
-                print(f"NOTIF_DEBUG: Created chat notif for {r_id}")
+                print(f"DEBUG: Notifying {r_id} about message from {sender_id_lower}")
 
         db.commit()
         db.refresh(new_msg)
