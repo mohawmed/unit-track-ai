@@ -285,7 +285,11 @@ export default function StudentChat({ teamId: propTeamId, teamName: propTeamName
                 )}
               </div>
               <p className="text-xs text-slate-400 font-mono tracking-tighter">
-                {new Date(msg.time || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                {(() => {
+                  const timeStr = msg.time || new Date().toISOString();
+                  const dateObj = new Date(timeStr.endsWith('Z') ? timeStr : timeStr + 'Z');
+                  return dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+                })()}
               </p>
             </div>
           </div>

@@ -218,7 +218,7 @@ def get_messages(team_id: str, db: Session = Depends(get_db)):
             "file_name": msg.file_name,
             "file_size": msg.file_size,
             "duration": msg.duration,
-            "time": msg.time,
+            "time": msg.time.isoformat() + "Z",
             "is_own": msg.is_own,
             "sender": user.name if user else "Member",
             "role": user.role if user else "student"
