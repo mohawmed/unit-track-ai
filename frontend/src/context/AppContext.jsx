@@ -22,7 +22,8 @@ export const AppProvider = ({ children }) => {
       
       const interval = setInterval(() => {
         syncProfile();
-      }, 10000); 
+        fetchNotifications();
+      }, 5000); 
       return () => clearInterval(interval);
     } else {
       localStorage.removeItem('unitrack_user');

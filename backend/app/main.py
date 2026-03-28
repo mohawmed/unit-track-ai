@@ -3,6 +3,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from typing import List
 import os
+import logging
+from datetime import datetime
 import google.generativeai as genai
 from dotenv import load_dotenv
 
@@ -236,7 +238,10 @@ def create_message(team_id: str, msg: schemas.MessageBase, db: Session = Depends
     team = db.query(models.Team).filter(models.Team.id == team_id).first()
     if team:
         # Collect all potential recipients
+        recipients = []
+        # Explicitly query students to avoid lazy loading issues
         recipients = [s.id for s in team.students]
+        
         if team.professor_id: recipients.append(team.professor_id)
         if team.assistant_id: recipients.append(team.assistant_id)
         
@@ -256,6 +261,7 @@ def create_message(team_id: str, msg: schemas.MessageBase, db: Session = Depends
                 read=False
             )
             db.add(notif)
+            print(f"Created notification for user {r_id} from {sender_name}")
 
     db.commit()
     db.refresh(new_msg)
