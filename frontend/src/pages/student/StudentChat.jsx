@@ -315,7 +315,8 @@ export default function StudentChat({ teamId: propTeamId, teamName: propTeamName
         </div>
         
         <button 
-          onClick={handleGetSummary}
+          type="button"
+          onClick={(e) => { e.preventDefault(); handleGetSummary(); }}
           disabled={isSummarizing}
           className="flex items-center gap-2 px-3 py-1.5 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-all font-medium text-xs group border border-blue-100 dark:border-blue-800"
         >
@@ -360,16 +361,18 @@ export default function StudentChat({ teamId: propTeamId, teamName: propTeamName
                       {activeMenuId === msg.id && (
                         <div className="absolute bottom-full left-0 mb-2 bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 shadow-xl rounded-xl py-1 z-20 min-w-[100px] animate-fade-in">
                           <button 
-                            onClick={() => { setEditingMsgId(msg.id); setEditValue(msg.text); setActiveMenuId(null); }}
-                            className="w-full flex items-center gap-2 px-3 py-1.5 text-xs text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
+                            type="button"
+                            onClick={(e) => { e.preventDefault(); e.stopPropagation(); setEditingMsgId(msg.id); setEditValue(msg.text || ""); setActiveMenuId(null); }}
+                            className="w-full text-right flex items-center justify-end gap-2 px-3 py-1.5 text-xs text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
                           >
-                            <Pencil className="w-3.5 h-3.5" /> تعديل
+                            تعديل <Pencil className="w-3.5 h-3.5" />
                           </button>
                           <button 
-                            onClick={() => { handleDelete(msg.id); setActiveMenuId(null); }}
-                            className="w-full flex items-center gap-2 px-3 py-1.5 text-xs text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                            type="button"
+                            onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleDelete(msg.id); setActiveMenuId(null); }}
+                            className="w-full text-right flex items-center justify-end gap-2 px-3 py-1.5 text-xs text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
                           >
-                            <Trash2 className="w-3.5 h-3.5" /> حذف
+                            حذف <Trash2 className="w-3.5 h-3.5" />
                           </button>
                         </div>
                       )}
@@ -377,17 +380,17 @@ export default function StudentChat({ teamId: propTeamId, teamName: propTeamName
                   </div>
                 )}
 
-                {editingMsgId === msg.id ? (
                   <div className="flex flex-col gap-2 min-w-[150px]">
                     <textarea 
-                      value={editValue}
+                      value={editValue || ""}
                       onChange={(e) => setEditValue(e.target.value)}
-                      className="bg-white/10 text-white border border-white/20 rounded-lg p-2 text-sm focus:outline-none focus:ring-1 focus:ring-white/40 resize-none"
+                      className="bg-white/10 text-white border border-white/20 rounded-lg p-2 text-sm focus:outline-none focus:ring-1 focus:ring-white/40 resize-none w-full"
                       rows={2}
+                      autoFocus
                     />
                     <div className="flex justify-end gap-1">
-                      <button onClick={() => setEditingMsgId(null)} className="p-1 rounded-md hover:bg-white/10"><X className="w-4 h-4" /></button>
-                      <button onClick={() => handleUpdate(msg.id)} className="p-1 bg-white/20 rounded-md hover:bg-white/30"><Check className="w-4 h-4" /></button>
+                      <button type="button" onClick={(e) => { e.preventDefault(); setEditingMsgId(null); }} className="p-1 rounded-md hover:bg-white/10"><X className="w-4 h-4" /></button>
+                      <button type="button" onClick={(e) => { e.preventDefault(); handleUpdate(msg.id); }} className="p-1 bg-white/20 rounded-md hover:bg-white/30"><Check className="w-4 h-4" /></button>
                     </div>
                   </div>
                 ) : msg.type === 'voice' ? (
