@@ -173,14 +173,21 @@ export default function StudentChat({ teamId: propTeamId, teamName: propTeamName
   };
 
   const handleGetSummary = async () => {
-    if (!activeTeamId) return;
+    if (!activeTeamId) {
+      alert("Error: No active team selected.");
+      return;
+    }
+    console.log(`[AI] Requesting summary for team: ${activeTeamId}`);
     setIsSummarizing(true);
     try {
       const res = await teamService.getChatSummary(activeTeamId);
+      console.log("[AI] Summary received:", res.data.summary);
       setSummary(res.data.summary);
       setShowSummary(true);
     } catch (err) {
       console.error("AI Summary failed", err);
+      const errMsg = err.response?.data?.detail || "فشل في توليد الملخص بالذكاء الاصطناعي.. جرب تاني كمان شوية.";
+      alert(errMsg);
     } finally {
       setIsSummarizing(false);
     }

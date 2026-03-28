@@ -229,11 +229,20 @@ def get_messages(team_id: str, db: Session = Depends(get_db)):
 
 @app.post("/teams/{team_id}/chat-summary")
 def get_chat_summary(team_id: str, db: Session = Depends(get_db)):
+    print(f"DEBUG: Chat summary request for team {team_id}")
     try:
-        # Fetch last 50 messages
+        # 1. Direct query with fuzzy fallback
         messages = db.query(models.Message).filter(models.Message.team_id == team_id).order_by(models.Message.time.desc()).limit(50).all()
         if not messages:
-            return {"summary": "لا توجد رسائل كافية للتلخيص حالياً."}
+            # Try fuzzy match
+            team = db.query(models.Team).filter(models.Team.id.ilike(team_id)).first()
+            if team:
+                messages = db.query(models.Message).filter(models.Message.team_id == team.id).order_by(models.Message.time.desc()).limit(50).all()
+
+        print(f"DEBUG: Found {len(messages)} messages for team {team_id}")
+        
+        if not messages:
+            return {"summary": "لا توجد رسائل كافية للتلخيص حالياً (المحادثة فارغة)."}
         
         # Format messages for AI
         chat_history = ""
@@ -259,7 +268,7 @@ def get_chat_summary(team_id: str, db: Session = Depends(get_db)):
         return {"summary": response.text}
     except Exception as e:
         print(f"AI_ERROR: {str(e)}")
-        raise HTTPException(status_code=500, detail="فشل في توليد الملخص بالذكاء الاصطناعي")
+        raise HTTPException(status_code=500, detail=f"خطأ في الذكاء الاصطناعي: {str(e)}")
 
 @app.post("/teams/{team_id}/messages", response_model=schemas.MessageResponse)
 def create_message(team_id: str, msg: schemas.MessageBase, db: Session = Depends(get_db)):
