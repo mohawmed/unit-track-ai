@@ -93,6 +93,32 @@ class NotificationResponse(NotificationBase):
     class Config:
         from_attributes = True
 
+class EventBase(BaseModel):
+    team_id: str
+    title: str
+    description: Optional[str] = None
+    date: str
+    type: str = "milestone"
+    color: str = "#3b82f6"
+
+class EventResponse(EventBase):
+    id: int
+    class Config:
+        from_attributes = True
+
+class ReviewBase(BaseModel):
+    team_id: str
+    reviewer_id: str
+    reviewee_id: str
+    rating: int
+    comment: Optional[str] = None
+
+class ReviewResponse(ReviewBase):
+    id: int
+    date: datetime
+    class Config:
+        from_attributes = True
+
 class AdminStats(BaseModel):
     total_users: int
     total_teams: int

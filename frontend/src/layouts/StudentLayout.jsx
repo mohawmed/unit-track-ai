@@ -13,6 +13,7 @@ const titles = {
   '/student/leaderboard': 'Leaderboard',
   '/student/reports': 'Reports',
   '/student/notifications': 'Notifications',
+  '/student/timeline': 'Project Timeline',
 };
 
 export default function StudentLayout() {

@@ -8,6 +8,7 @@ const titles = {
   '/professor/analytics': 'Analytics',
   '/professor/chat': 'Team Chat',
   '/professor/ai': 'AI Assistant',
+  '/professor/timeline': 'Project Timeline',
 };
 
 export default function ProfessorLayout() {

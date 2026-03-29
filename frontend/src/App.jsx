@@ -38,6 +38,9 @@ import AdminUsers from './pages/admin/AdminUsers';
 import AdminAnalytics from './pages/admin/AdminAnalytics';
 import AdminSettings from './pages/admin/AdminSettings';
 import ProfilePage from './pages/shared/ProfilePage';
+import Timeline from './pages/shared/Timeline';
+import FileManager from './pages/shared/FileManager';
+import PeerReview from './pages/shared/PeerReview';
 
 function ProtectedRoute({ children, allowedRole }) {
   const { user } = useApp();
@@ -68,6 +71,9 @@ export default function App() {
           <Route path="leaderboard" element={<StudentLeaderboard />} />
           <Route path="reports" element={<StudentReports />} />
           <Route path="notifications" element={<StudentNotifications />} />
+          <Route path="timeline" element={<Timeline />} />
+          <Route path="project-files" element={<FileManager />} />
+          <Route path="peer-review" element={<PeerReview />} />
           <Route path="profile" element={<ProfilePage />} />
         </Route>
 
@@ -78,6 +84,8 @@ export default function App() {
           <Route path="chat" element={<ProfessorChat />} />
           <Route path="analytics" element={<ProfessorAnalytics />} />
           <Route path="ai" element={<ProfessorAI />} />
+          <Route path="timeline" element={<Timeline />} />
+          <Route path="files" element={<FileManager />} />
           <Route path="profile" element={<ProfilePage />} />
         </Route>
 
@@ -87,6 +95,8 @@ export default function App() {
           <Route path="team/:teamId" element={<AssistantTeam />} />
           <Route path="chat" element={<AssistantChat />} />
           <Route path="ai" element={<AssistantAI />} />
+          <Route path="timeline" element={<Timeline />} />
+          <Route path="files" element={<FileManager />} />
           <Route path="profile" element={<ProfilePage />} />
         </Route>
 

@@ -4,16 +4,19 @@ import { useApp } from '../context/AppContext';
 import {
   LayoutDashboard, CheckSquare, TrendingUp, FileText, MessageCircle,
   Bot, Trophy, BarChart2, Bell, Settings, LogOut, ChevronRight,
-  Users, BookOpen, Shield, ClipboardList, Sun, Moon, Sparkles
+  Users, BookOpen, Shield, ClipboardList, Sun, Moon, Sparkles, Calendar, HardDrive, Star
 } from 'lucide-react';
 
 const studentNav = [
   { to: '/student', icon: LayoutDashboard, label: 'Dashboard', end: true },
   { to: '/student/tasks', icon: CheckSquare, label: 'Tasks' },
   { to: '/student/progress', icon: TrendingUp, label: 'Progress' },
-  { to: '/student/files', icon: FileText, label: 'Files' },
+  { to: '/student/files', icon: FileText, label: 'Submissions' },
+  { to: '/student/project-files', icon: HardDrive, label: 'Project Files' },
   { to: '/student/chat', icon: MessageCircle, label: 'Chat' },
+  { to: '/student/peer-review', icon: Star, label: 'Peer Review' },
   { to: '/student/ai', icon: Bot, label: 'AI Assistant' },
+  { to: '/student/timeline', icon: Calendar, label: 'Timeline' },
   { to: '/student/leaderboard', icon: Trophy, label: 'Leaderboard' },
   { to: '/student/reports', icon: BarChart2, label: 'Reports' },
   { to: '/student/notifications', icon: Bell, label: 'Notifications' },
@@ -22,14 +25,18 @@ const studentNav = [
 const professorNav = [
   { to: '/professor', icon: LayoutDashboard, label: 'My Teams', end: true },
   { to: '/professor/analytics', icon: BarChart2, label: 'Analytics' },
+  { to: '/professor/files', icon: HardDrive, label: 'Project Files' },
   { to: '/professor/chat', icon: MessageCircle, label: 'Chat' },
   { to: '/professor/ai', icon: Bot, label: 'AI Assistant' },
+  { to: '/professor/timeline', icon: Calendar, label: 'Timeline' },
 ];
 
 const assistantNav = [
   { to: '/assistant', icon: LayoutDashboard, label: 'Dashboard', end: true },
+  { to: '/assistant/files', icon: HardDrive, label: 'Project Files' },
   { to: '/assistant/chat', icon: MessageCircle, label: 'Chat' },
   { to: '/assistant/ai', icon: Bot, label: 'AI Assistant' },
+  { to: '/assistant/timeline', icon: Calendar, label: 'Timeline' },
 ];
 
 const adminNav = [

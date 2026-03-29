@@ -78,6 +78,28 @@ class Message(Base):
     time = Column(DateTime, default=datetime.utcnow)
     is_own = Column(Boolean) # This is usually dynamic based on current user, but stored for reference
 
+class Event(Base):
+    __tablename__ = "events"
+
+    id = Column(Integer, primary_key=True, index=True)
+    team_id = Column(String, ForeignKey('teams.id'))
+    title = Column(String)
+    description = Column(String, nullable=True)
+    date = Column(String) # ISO date string
+    type = Column(String, default="milestone") # milestone, meeting, deadline
+    color = Column(String, default="#3b82f6")
+
+class Review(Base):
+    __tablename__ = "reviews"
+
+    id = Column(Integer, primary_key=True, index=True)
+    team_id = Column(String, ForeignKey('teams.id'))
+    reviewer_id = Column(String, ForeignKey('users.id'))
+    reviewee_id = Column(String, ForeignKey('users.id'))
+    rating = Column(Integer) # 1-5
+    comment = Column(String, nullable=True)
+    date = Column(DateTime, default=datetime.utcnow)
+
 class Notification(Base):
     __tablename__ = "notifications"
 

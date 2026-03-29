@@ -8,7 +8,7 @@ from datetime import datetime
 import google.generativeai as genai
 from dotenv import load_dotenv
 
-from app import models, schemas, database
+from app import models, schemas, database, email_service
 from app.database import engine, get_db
 
 load_dotenv()
@@ -115,6 +115,21 @@ def _seed_database(db):
     ]
     for n in notifications:
         db.add(n)
+        
+    events = [
+        models.Event(team_id='team-001', title='First Presentation', description='Demo initial prototype.', date='2026-03-30', type='milestone', color='#f59e0b'),
+        models.Event(team_id='team-001', title='Team Meeting', description='Discuss architecture.', date='2026-04-02', type='meeting', color='#10b981'),
+        models.Event(team_id='team-003', title='Field Research', description='Visit site.', date='2026-04-05', type='milestone', color='#3b82f6'),
+    ]
+    for e in events:
+        db.add(e)
+        
+    reviews = [
+        models.Review(team_id='team-001', reviewer_id='stu-001', reviewee_id='stu-002', rating=5, comment='Great cooperation and technical skills!'),
+        models.Review(team_id='team-001', reviewer_id='stu-002', reviewee_id='stu-001', rating=4, comment='Always on time with tasks.'),
+    ]
+    for r in reviews:
+        db.add(r)
     db.commit()
 
 # Configure CORS
@@ -196,7 +211,113 @@ def update_task(task_id: str, task_data: schemas.TaskBase, db: Session = Depends
         setattr(task, key, value)
     db.commit()
     db.refresh(task)
+    
+    # Trigger email if score was updated
+    if task.score:
+        team = db.query(models.Team).filter(models.Team.id == task.team_id).first()
+        if team:
+            for student in team.students:
+                email_service.notify_of_new_feedback(student.email, student.name, "Professor")
+                
     return task
+
+# Timeline Endpoints
+@app.get("/teams/{team_id}/timeline")
+def get_team_timeline(team_id: str, db: Session = Depends(get_db)):
+    # Combine tasks (as deadlines) and events
+    tasks = db.query(models.Task).filter(models.Task.team_id == team_id).all()
+    events = db.query(models.Event).filter(models.Event.team_id == team_id).all()
+    
+    timeline = []
+    for t in tasks:
+        timeline.append({
+            "id": f"task-{t.id}",
+            "title": t.title,
+            "description": t.description,
+            "date": t.deadline,
+            "type": "deadline",
+            "status": t.status,
+            "color": t.color
+        })
+    for e in events:
+        timeline.append({
+            "id": f"event-{e.id}",
+            "title": e.title,
+            "description": e.description,
+            "date": e.date,
+            "type": e.type,
+            "color": e.color
+        })
+    
+    # Sort by date
+    timeline.sort(key=lambda x: x['date'])
+    return timeline
+
+@app.get("/teams/{team_id}/files")
+def get_team_files(team_id: str, db: Session = Depends(get_db)):
+    # Pull all messages that have attachments
+    msgs = db.query(models.Message).filter(
+        models.Message.team_id == team_id,
+        models.Message.type.in_(['image', 'file', 'voice'])
+    ).order_by(models.Message.time.desc()).all()
+    
+    files = []
+    for m in msgs:
+        user = db.query(models.User).filter(models.User.id == m.sender_id).first()
+        files.append({
+            "id": m.id,
+            "name": m.file_name or (f"Image_{m.id}.png" if m.type == 'image' else f"Voice_{m.id}.wav"),
+            "type": m.type,
+            "url": m.url,
+            "size": m.file_size or "N/A",
+            "date": m.time.strftime("%Y-%m-%d"),
+            "sender": user.name if user else "Member"
+        })
+    return files
+
+@app.post("/events", response_model=schemas.EventResponse)
+def create_event(event: schemas.EventBase, db: Session = Depends(get_db)):
+    db_event = models.Event(**event.dict())
+    db.add(db_event)
+    db.commit()
+    db.refresh(db_event)
+    return db_event
+
+# Review Endpoints
+@app.get("/teams/{team_id}/reviews", response_model=List[schemas.ReviewResponse])
+def get_team_reviews(team_id: str, db: Session = Depends(get_db)):
+    return db.query(models.Review).filter(models.Review.team_id == team_id).all()
+
+@app.post("/reviews", response_model=schemas.ReviewResponse)
+def create_review(review: schemas.ReviewBase, db: Session = Depends(get_db)):
+    # Check if a review already exists from this reviewer to this reviewee in this team
+    existing = db.query(models.Review).filter(
+        models.Review.team_id == review.team_id,
+        models.Review.reviewer_id == review.reviewer_id,
+        models.Review.reviewee_id == review.reviewee_id
+    ).first()
+    
+    if existing:
+        # Update existing instead of creating new
+        existing.rating = review.rating
+        existing.comment = review.comment
+        existing.date = datetime.utcnow()
+        db.commit()
+        db.refresh(existing)
+        return existing
+        
+    db_review = models.Review(**review.dict())
+    db.add(db_review)
+    db.commit()
+    db.refresh(db_review)
+    
+    # Trigger email to reviewee
+    reviewee = db.query(models.User).filter(models.User.id == review.reviewee_id).first()
+    reviewer = db.query(models.User).filter(models.User.id == review.reviewer_id).first()
+    if reviewee and reviewer:
+        email_service.notify_of_new_feedback(reviewee.email, reviewee.name, reviewer.name)
+        
+    return db_review
 
 # Notification Endpoints
 @app.get("/users/{user_id}/notifications", response_model=List[schemas.NotificationResponse])

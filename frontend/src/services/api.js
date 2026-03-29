@@ -26,6 +26,11 @@ export const teamService = {
   getChatSummary: (teamId) => api.post(`/teams/${teamId}/chat-summary`),
   updateMessage: (teamId, msgId, data) => api.put(`/teams/${teamId}/messages/${msgId}`, data),
   deleteMessage: (teamId, msgId, senderId) => api.delete(`/teams/${teamId}/messages/${msgId}`, { params: { sender_id: senderId } }),
+  getTimeline: (teamId) => api.get(`/teams/${teamId}/timeline`),
+  getFiles: (teamId) => api.get(`/teams/${teamId}/files`),
+  getReviews: (teamId) => api.get(`/teams/${teamId}/reviews`),
+  createReview: (data) => api.post('/reviews', data),
+  createEvent: (data) => api.post('/events', data),
   getAll: () => api.get('/teams'),
 };
 

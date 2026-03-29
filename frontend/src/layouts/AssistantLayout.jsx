@@ -7,6 +7,7 @@ const titles = {
   '/assistant': 'Supervisor Dashboard',
   '/assistant/chat': 'Team Chat',
   '/assistant/ai': 'AI Assistant',
+  '/assistant/timeline': 'Project Timeline',
 };
 
 export default function AssistantLayout() {
